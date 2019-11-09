@@ -7,7 +7,7 @@
     {
       "name": "Siberfx",
       "email": "info@siberfx.com"
-    },
+    }
   ],
   "require": {
     "php": ">=7.1"

@@ -10,7 +10,7 @@ class MetaTag
     /**
      * Instance of request
      *
-     * @var \Illuminate\Http\Request
+     * @var Request
      */
     private $request;
 
@@ -57,7 +57,7 @@ class MetaTag
     ];
 
     /**
-     * @param  \Illuminate\Http\Request  $request
+     * @param Request $request
      * @param  array $config
      * @param  string $defaultLocale
      */
