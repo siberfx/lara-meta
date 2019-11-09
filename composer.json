@@ -1,0 +1,33 @@
+{
+    "name": "siberfx/lara-meta",
+    "keywords": ["meta", "tags", "head", "laravel"],
+    "description": "A package to manage Header Meta Tags",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Siberfx",
+            "email": "info@siberfx.com"
+        }
+    ],
+    "require": {
+        "php": ">=7.1"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^7.5"
+    },
+    "autoload": {
+        "psr-4": {
+            "Siberfx\\LaraMeta\\": "src/Siberfx/LaraMeta/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Siberfx\\LaraMeta\\MetaServiceProvider"
+            ],
+            "aliases": {
+                "Meta": "Siberfx\\LaraMeta\\Facade"
+            }
+        }
+    }
+}
