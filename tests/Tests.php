@@ -1,7 +1,9 @@
 <?php
 use Siberfx\LaraMeta\Meta;
+use Illuminate\Foundation\Testing\TestCase as BaseTestCase;
 
-class Tests extends PHPUnit_Framework_TestCase
+
+class Tests extends BaseTestCase
 {
     protected static $title;
     protected $meta;
