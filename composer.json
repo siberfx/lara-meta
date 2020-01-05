@@ -26,11 +26,8 @@
   },
   "extra": {
         "laravel": {
-            "providers": [
-                "Siberfx\\LaraMeta\\MetaTagServiceProvider"
-            ],
             "aliases": {
-                "Image": "Siberfx\\LaraMeta\\MetaTag\\Facades\\MetaTag"
+                "MetaTag": "Siberfx\\LaraMeta\\MetaTag\\Facades\\MetaTag"
             }
         }
     },
