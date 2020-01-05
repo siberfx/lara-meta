@@ -13,7 +13,7 @@ class MetaTagsServiceProvider extends ServiceProvider
      */
     protected $defer = true;
     
-    protected $packageName = 'LaraMeta';
+//    protected $packageName = 'LaraMeta';
 
     /**
      * Bootstrap the application events.
