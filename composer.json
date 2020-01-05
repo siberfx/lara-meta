@@ -2,6 +2,7 @@
   "name": "siberfx/lara-meta",
   "keywords": ["meta tags", "meta", "tags", "head", "laravel"],
   "description": "A package to manage Header Meta Tags for Laravel 6.0",
+  "version": "1.0",
   "license": "MIT",
   "authors": [
     {
