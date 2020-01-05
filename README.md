@@ -89,7 +89,7 @@ abstract class Controller extends BaseController
     public function __construct()
     {
         // Defaults
-        MetaTag::set('description', 'Blog Wes Anderson bicycle rights, occupy Shoreditch gentrify keffiyeh.');
+        MetaTag::set('description', 'description of the page or content you desire to be visible on google searches');
         MetaTag::set('image', asset('images/default-share-image.png'));
     }
 }
