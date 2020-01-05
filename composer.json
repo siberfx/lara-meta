@@ -23,13 +23,5 @@
       "App\\": "app/",
       "Siberfx\\LaraMeta\\": "src/Siberfx/LaraMeta/"
     }
-  },
-  "extra": {
-        "laravel": {
-            "aliases": {
-                "MetaTag": "Siberfx\\LaraMeta\\MetaTag\\Facades\\MetaTag"
-            }
-        }
-    },
-    "minimum-stability": "stable"
+  }
 }
