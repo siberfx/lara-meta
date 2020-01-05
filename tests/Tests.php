@@ -1,16 +1,17 @@
 <?php
 use Siberfx\LaraMeta\Meta;
+use Tests\TestCase;
 
-class Tests extends PHPUnit_Framework_TestCase
+class Tests extends TestCase
 {
     protected static $title;
-    protected $Meta;
+    protected $meta;
 
     public function setUp()
     {
         self::$title = self::text(20);
 
-        $this->Meta = new Meta([
+        $this->meta = new Meta([
             'title_limit' => 70,
             'description_limit' => 200,
             'image_limit' => 5
@@ -31,11 +32,11 @@ class Tests extends PHPUnit_Framework_TestCase
 
     public function testMetaTitle()
     {
-        $response = $this->Meta->set('title', $text = self::text(50));
+        $response = $this->meta->set('title', $text = self::text(50));
 
         $this->assertTrue($text === $response);
 
-        $response = $this->Meta->set('title', $text = self::text(80));
+        $response = $this->meta->set('title', $text = self::text(80));
 
         $this->assertNotTrue($text, $response);
         $this->assertTrue(mb_strlen($response) === 70);
@@ -43,11 +44,11 @@ class Tests extends PHPUnit_Framework_TestCase
 
     public function testMetaDescription()
     {
-        $response = $this->Meta->set('description', $text = self::text(50));
+        $response = $this->meta->set('description', $text = self::text(50));
 
         $this->assertTrue($text === $response);
 
-        $response = $this->Meta->set('description', $text = self::text(250));
+        $response = $this->meta->set('description', $text = self::text(250));
 
         $this->assertNotTrue($text === $response);
         $this->assertTrue(mb_strlen($response) === 200);
@@ -55,15 +56,15 @@ class Tests extends PHPUnit_Framework_TestCase
 
     public function testMetaTitleWithTitle()
     {
-        $response = $this->Meta->title(self::$title);
+        $response = $this->meta->title(self::$title);
 
         $this->assertTrue(self::$title === $response);
 
-        $response = $this->Meta->set('title', $text = self::text(30));
+        $response = $this->meta->set('title', $text = self::text(30));
 
         $this->assertTrue($text.' - '.self::$title === $response);
 
-        $response = $this->Meta->set('title', $text = self::text(80));
+        $response = $this->meta->set('title', $text = self::text(80));
 
         $this->assertNotTrue($text.' - '.self::$title === $response);
         $this->assertTrue(mb_strlen($response) === 70);
@@ -71,16 +72,16 @@ class Tests extends PHPUnit_Framework_TestCase
 
     public function testMetaImage()
     {
-        $response = $this->Meta->set('image', $text = self::text(30));
+        $response = $this->meta->set('image', $text = self::text(30));
 
         $this->assertTrue($text === $response);
 
-        $response = $this->Meta->set('image', $text = self::text(150));
+        $response = $this->meta->set('image', $text = self::text(150));
 
         $this->assertTrue($text === $response);
 
         for ($i = 0; $i < 5; $i++) {
-            $response = $this->Meta->set('image', $text =self::text(80));
+            $response = $this->meta->set('image', $text =self::text(80));
 
             if ($i > 2) {
                 $this->assertTrue(empty($response));
@@ -89,15 +90,15 @@ class Tests extends PHPUnit_Framework_TestCase
             }
         }
 
-        $this->assertTrue(count($this->Meta->get('image')) === 5);
+        $this->assertTrue(count($this->meta->get('image')) === 5);
     }
 
     public function testTagTitle()
     {
-        $this->Meta->title(self::$title);
-        $this->Meta->set('title', $text = self::text(20));
+        $this->meta->title(self::$title);
+        $this->meta->set('title', $text = self::text(20));
 
-        $tag = $this->Meta->tag('title');
+        $tag = $this->meta->tag('title');
 
         $this->assertTrue(mb_substr_count($tag, '<meta name="title"') === 1);
         $this->assertTrue(mb_substr_count($tag, '<meta name="twitter:title"') === 1);
@@ -109,9 +110,9 @@ class Tests extends PHPUnit_Framework_TestCase
 
     public function testTagDescription()
     {
-        $this->Meta->set('description', $text = self::text(150));
+        $this->meta->set('description', $text = self::text(150));
 
-        $tag = $this->Meta->tag('description');
+        $tag = $this->meta->tag('description');
 
         $this->assertTrue(mb_substr_count($tag, '<meta name="description"') === 1);
         $this->assertTrue(mb_substr_count($tag, '<meta name="twitter:description"') === 1);
@@ -123,10 +124,10 @@ class Tests extends PHPUnit_Framework_TestCase
     public function testTagImage()
     {
         for ($i = 0; $i < 10; $i++) {
-            $this->Meta->set('image', self::text(80));
+            $this->meta->set('image', self::text(80));
         }
 
-        $tag = $this->Meta->tag('image');
+        $tag = $this->meta->tag('image');
 
         $this->assertTrue(mb_substr_count($tag, '<meta name="image"') === 5);
         $this->assertTrue(mb_substr_count($tag, '<meta name="twitter:image"') === 5);
@@ -137,7 +138,7 @@ class Tests extends PHPUnit_Framework_TestCase
 
     public function testTagImageDefault()
     {
-        $tag = $this->Meta->tag('image', self::text(80));
+        $tag = $this->meta->tag('image', self::text(80));
 
         $this->assertTrue(mb_substr_count($tag, '<meta name="image"') === 1);
         $this->assertTrue(mb_substr_count($tag, '<meta name="twitter:image"') === 1);
@@ -146,10 +147,10 @@ class Tests extends PHPUnit_Framework_TestCase
         $this->assertTrue(mb_substr_count($tag, '<link rel="image_src"') === 1);
 
         for ($i = 0; $i < 3; $i++) {
-            $this->Meta->set('image', self::text(80));
+            $this->meta->set('image', self::text(80));
         }
 
-        $tag = $this->Meta->tag('image');
+        $tag = $this->meta->tag('image');
 
         $this->assertTrue(mb_substr_count($tag, '<meta name="image"') === 3);
         $this->assertTrue(mb_substr_count($tag, '<meta name="twitter:image"') === 3);
@@ -157,7 +158,7 @@ class Tests extends PHPUnit_Framework_TestCase
         $this->assertTrue(mb_substr_count($tag, '<image>') === 0);
         $this->assertTrue(mb_substr_count($tag, '<link rel="image_src"') === 3);
 
-        $tag = $this->Meta->tag('image', self::text(80));
+        $tag = $this->meta->tag('image', self::text(80));
 
         $this->assertTrue(mb_substr_count($tag, '<meta name="image"') === 4);
         $this->assertTrue(mb_substr_count($tag, '<meta name="twitter:image"') === 4);
@@ -165,7 +166,7 @@ class Tests extends PHPUnit_Framework_TestCase
         $this->assertTrue(mb_substr_count($tag, '<image>') === 0);
         $this->assertTrue(mb_substr_count($tag, '<link rel="image_src"') === 4);
 
-        $tag = $this->Meta->tag('image', self::text(80));
+        $tag = $this->meta->tag('image', self::text(80));
 
         $this->assertTrue(mb_substr_count($tag, '<meta name="image"') === 4);
         $this->assertTrue(mb_substr_count($tag, '<meta name="twitter:image"') === 4);

@@ -1,5 +1,10 @@
 # Laravel Meta Tags
 
+[![Latest Stable Version](https://poser.pugx.org/siberfx/lara-meta/v/stable)](https://packagist.org/packages/siberfx/lara-meta)
+[![Total Downloads](https://poser.pugx.org/siberfx/lara-meta/downloads)](https://packagist.org/packages/siberfx/lara-meta)
+[![Latest Unstable Version](https://poser.pugx.org/siberfx/lara-meta/v/unstable)](https://packagist.org/packages/siberfx/lara-meta)
+[![License](https://poser.pugx.org/siberfx/lara-meta/license)](https://packagist.org/packages/siberfx/lara-meta)
+
 With this package you can manage header Meta Tags from Laravel controllers.
 
 ----------
