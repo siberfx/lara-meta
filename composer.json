@@ -18,6 +18,7 @@
   },
   "autoload": {
     "psr-4": {
+      "App\\": "app/",
       "Siberfx\\LaraMeta\\": "src/Siberfx/LaraMeta/"
     }
   }
