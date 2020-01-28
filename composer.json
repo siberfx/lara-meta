@@ -24,7 +24,7 @@
             "Siberfx\\LaraMeta\\MetaTagsServiceProvider"
         ],
         "aliases": {
-            "MetaTag": "Siberfx\\LaraMeta\\Facade"
+            "MetaTag": "Siberfx\\LaraMeta\\Facades\\MetaTag"
         }
     }
 },
