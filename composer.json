@@ -33,5 +33,10 @@
     "psr-4": {
       "Siberfx\\LaraMeta\\": "src/Siberfx/LaraMeta/"
     }
-  }
+  },
+  "autoload-dev": {
+        "psr-4": {
+            "Tests\\": "tests/"
+        }
+    }
 }
