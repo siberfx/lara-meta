@@ -22,6 +22,9 @@ $ composer require siberfx/lara-meta
 
 Once Meta Tags is installed you need to register the service provider with the application. Open up `config/app.php` and find the `providers` key.
 
+
+
+## if you are using Laravel 5.5+ you dont need to add providers and aliases
 ```php
 'providers' => array(
 
@@ -39,6 +42,7 @@ Meta Tags also ships with a facade which provides the static syntax for creating
 
 )
 ```
+
 
 ### Publish the configurations
 
