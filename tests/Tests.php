@@ -1,4 +1,7 @@
 <?php
+
+namespace Siberfx\LaraMeta\Tests
+
 use Siberfx\LaraMeta\Meta;
 use Tests\TestCase;
 
