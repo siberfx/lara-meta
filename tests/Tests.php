@@ -1,6 +1,6 @@
 <?php
 
-namespace Siberfx\LaraMeta\Tests
+namespace Siberfx\LaraMeta\Tests;
 
 use Tests\TestCase;
 
