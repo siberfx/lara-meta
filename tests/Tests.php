@@ -2,7 +2,7 @@
 
 namespace Siberfx\LaraMeta\Tests;
 
-use Tests\TestCase;
+use PHPUnit\Framework\TestCase;
 
 class Tests extends TestCase
 {
