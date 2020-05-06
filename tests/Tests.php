@@ -2,7 +2,6 @@
 
 namespace Siberfx\LaraMeta\Tests
 
-use Siberfx\LaraMeta\Meta;
 use Tests\TestCase;
 
 class Tests extends TestCase
@@ -14,7 +13,7 @@ class Tests extends TestCase
     {
         self::$title = self::text(20);
 
-        $this->meta = new Meta([
+        $this->meta = new Siberfx\LaraMeta\Meta([
             'title_limit' => 70,
             'description_limit' => 200,
             'image_limit' => 5
