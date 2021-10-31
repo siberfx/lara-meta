@@ -21,7 +21,8 @@
   },
   "autoload": {
     "psr-4": {
-      "Siberfx\\LaraMeta\\": "src/Siberfx/LaraMeta/"    }
+      "Siberfx\\LaraMeta\\": "src/Siberfx/LaraMeta/"
+    }
   },
     "extra": {
     "laravel": {
