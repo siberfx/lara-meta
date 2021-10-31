@@ -34,10 +34,14 @@ class MetaTagsServiceProvider extends ServiceProvider
      */
     public function register()
     {
+        $this->mergeConfigFrom(
+            __DIR__ . '/config/config.php', 'meta-tags'
+        );
+        
         // $this->app['metatag'] = $this->app->share(function ($app) { // Removed to support laravel 5.4
        $this->app->singleton('metatag', function ($app) {
             return new MetaTag(
-                app()->request(),
+                request(),
                 config('meta-tags'),
                 config('app.locale')
             );
