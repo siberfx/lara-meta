@@ -7,12 +7,12 @@
          convertNoticesToExceptions="true"
          convertWarningsToExceptions="true"
          processIsolation="false"
-         stopOnFailure="true"
+         stopOnFailure="false"
          syntaxCheck="false"
 >
     <testsuites>
-        <testsuite name="Unit">
-            <directory suffix=".php">./tests/</directory>
+        <testsuite name="Laravel Meta Test Suite">
+            <directory suffix="Test.php">./tests/</directory>
         </testsuite>
     </testsuites>
 </phpunit>
