@@ -1,46 +1,45 @@
 {
-    "name": "siberfx/lara-meta",
-    "description": "A package to manage Header Meta Tags for Laravel 7-8",
-    "keywords": [
-        "share",
-        "laravel",
-        "laravel7",
-        "laravel8"
-    ],
-    "license": "MIT",
-    "authors": [
-        {
-            "name": "Selim GORMUS",
-            "email": "info@siberfx.com",
-            "homepage": "https://siberfx.com"
-        }
-    ],
-    "require": {
-        "php": "^7.3|^8.0",
-        "illuminate/support": "^7|^8"
-    },
-    "require-dev": {
-        "phpunit/phpunit": "^9.3",
-        "mockery/mockery": "^1.3"
-    },
-    "extra": {
-        "laravel": {
-            "providers": [
-                "Siberfx\\LaraMeta\\MetaTagsServiceProvider"
-            ],
-            "aliases": {
-                "MetaTag": "Siberfx\\LaraMeta\\Facades\\MetaTag"
-            }
-        }
-    },
-    "autoload": {
-        "psr-4": {
-            "Siberfx\\LaraMeta\\": "src/Siberfx/LaraMeta/"
-        }
-    },
-    "autoload-dev": {
-        "psr-4": {
-            "Tests\\": "tests/"
-        }
+  "name": "siberfx/lara-meta",
+  "description": "A package to manage Header Meta Tags for Laravel 7-8",
+  "keywords": [
+    "share",
+    "laravel",
+    "laravel7",
+    "laravel8"
+  ],
+  "version": "2.2.1",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "siberfx",
+      "email": "info@siberfx.com"
     }
+  ],
+  "require": {
+    "php": "^7|^8",
+    "illuminate/support": "^7|^8"
+  },
+  "autoload": {
+    "psr-0": {
+      "Siberfx\\LaraMeta\\": "src/"
+    },
+    "classmap": [
+        "tests/TestCase.php"
+    ]
+  },
+    "extra": {
+    "laravel": {
+      "providers": [
+        "Siberfx\\LaraMeta\\MetaTagsServiceProvider"
+      ],
+      "aliases": {
+        "MetaTag": "Siberfx\\LaraMeta\\Facades\\MetaTag"
+      }
+    }
+  },
+  "minimum-stability": "dev",
+  "require-dev": {
+    "orchestra/testbench": "~3.0",
+    "mockery/mockery": "^1.3"
+  }
 }
