@@ -20,9 +20,8 @@
     "illuminate/support": "^7|^8"
   },
   "autoload": {
-    "psr-0": {
-      "Siberfx\\LaraMeta\\": "src/"
-    }
+    "psr-4": {
+      "Siberfx\\LaraMeta\\": "src/Siberfx/LaraMeta/"    }
   },
     "extra": {
     "laravel": {
