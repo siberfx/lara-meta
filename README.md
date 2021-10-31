@@ -20,11 +20,8 @@ From the command line run
 $ composer require siberfx/lara-meta
 ```
 
-Once Meta Tags is installed you need to register the service provider with the application. Open up `config/app.php` and find the `providers` key.
 
-
-
-## if you are using Laravel 5.5+ you dont need to add providers and aliases
+## Laravel 7+ version supported
 ```php
 'providers' => array(
 
