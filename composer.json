@@ -22,10 +22,7 @@
   "autoload": {
     "psr-0": {
       "Siberfx\\LaraMeta\\": "src/"
-    },
-    "classmap": [
-        "tests/TestCase.php"
-    ]
+    }
   },
     "extra": {
     "laravel": {
