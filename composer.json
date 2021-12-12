@@ -1,7 +1,7 @@
 {
   "name": "siberfx/lara-meta",
   "keywords": ["meta tags", "meta", "tags", "head", "laravel"],
-  "description": "A package to manage Header Meta Tags for Laravel 6.0",
+  "description": "A package to manage Header Meta Tags for Laravel 8+",
   "license": "MIT",
     "authors": [
         {
@@ -12,10 +12,10 @@
     ],
   "minimum-stability": "stable",
   "require": {
-    "php": "8|8.1|9"
+    "php": "^7|^8",
+    "illuminate/support": "^7|^8",
   },
   "require-dev": {
-    "phpunit/phpunit": "^8.5"
   },
   "extra": {
     "laravel": {
