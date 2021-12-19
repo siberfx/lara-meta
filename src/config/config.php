@@ -9,7 +9,7 @@ return array(
      |
      */
 
-    'title' => 'My Site',
+    'title' => config('app.name'),
 
     /*
      |--------------------------------------------------------------------------
@@ -41,7 +41,7 @@ return array(
      */
 
     'open_graph' => [
-        'site_name' => 'My Site',
+        'site_name' => config('app.name'),
         'type' => 'website'
     ],
 

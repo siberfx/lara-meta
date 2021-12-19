@@ -20,8 +20,8 @@ From the command line run
 $ composer require siberfx/lara-meta
 ```
 
+## Laravel 7+ versions are supported
 
-## Laravel 7+ version supported
 ```php
 'providers' => array(
 
@@ -30,7 +30,8 @@ $ composer require siberfx/lara-meta
 )
 ```
 
-Meta Tags also ships with a facade which provides the static syntax for creating collections. You can register the facade in the `aliases` key of your `config/app.php` file.
+Meta Tags also ships with a facade which provides the static syntax for creating collections. You can register the
+facade in the `aliases` key of your `config/app.php` file.
 
 ```php
 'aliases' => array(
@@ -39,7 +40,6 @@ Meta Tags also ships with a facade which provides the static syntax for creating
 
 )
 ```
-
 
 ### Publish the configurations
 
@@ -66,7 +66,6 @@ Various settings for these options can be found in the `config/meta-tags.php` fi
 ```php
 {!! MetaTag::openGraph() !!}
 ```
-
 
 ## Examples
 
@@ -112,8 +111,13 @@ class HomeController extends Controller
         // Section description
         MetaTag::set('title', 'You are at home');
         MetaTag::set('description', 'This is my home. Enjoy!');
+        MetaTag::set('keywords', 'This is my home. Enjoy!');
+        MetaTag::set('image', asset('images/detail-logo.png'));
+        MetaTag::set('canonical', 'http://example.com');
 
-        return view('index');
+        MetaTag::set('robots', 'index,follow');
+
+   return view('index');
     }
 
     public function detail()
@@ -149,10 +153,14 @@ class HomeController extends Controller
 
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-        <title>{{ MetaTag::get('title') }}</title>
+        <title>{{ MetaTag::get('title') . ' :: '. config('app.name')  }}</title>
 
         {!! MetaTag::tag('description') !!}
+        {!! MetaTag::tag('keywords') !!}
         {!! MetaTag::tag('image') !!}
+        {!! MetaTag::tag('image') !!}
+        {!! MetaTag::tag('canonical') !!}
+        {!! MetaTag::tag('robots') !!}
         
         {!! MetaTag::openGraph() !!}
         
