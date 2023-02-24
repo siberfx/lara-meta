@@ -16,6 +16,8 @@
     "illuminate/support": "^7|^8|^9|^10"
   },
   "require-dev": {
+     "phpunit/phpunit": "^8.0 || ^9.0 || ^10.0",
+     "scrutinizer/ocular": "~1.7"
   },
   "extra": {
     "laravel": {
@@ -31,10 +33,5 @@
     "psr-4": {
       "Siberfx\\LaraMeta\\": "src/Siberfx/LaraMeta/"
     }
-  },
-  "autoload-dev": {
-        "psr-4": {
-          
-        }
-    }
+  }
 }
