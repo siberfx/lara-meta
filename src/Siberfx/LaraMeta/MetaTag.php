@@ -20,8 +20,6 @@ class MetaTag
     private $config = [];
 
     /**
-     * Locale default for app.
-     *
      * @var string
      */
     private $defaultLocale = '';
@@ -32,7 +30,7 @@ class MetaTag
     private $metas = [];
 
     /**
-     * @var string
+     * @var
      */
     private $title;
 
@@ -58,10 +56,10 @@ class MetaTag
 
     /**
      * @param Request $request
-     * @param  array $config
-     * @param  string $defaultLocale
+     * @param array $config
+     * @param string $defaultLocale
      */
-    public function __construct(Request $request, array $config = [], $defaultLocale)
+    public function __construct(Request $request, array $config = [], string $defaultLocale = 'en')
     {
         $this->request = $request;
         $this->config = $config;
@@ -80,19 +78,18 @@ class MetaTag
     }
 
     /**
-     * Set app support locales.
-     *
-     * @param  array $locals
+     * @param array $locals
+     * @return void
      */
-    public function setLocales(array $locals = [])
+    public function setLocales(array $locals = []): void
     {
         $this->config['locales'] = $locals;
     }
 
     /**
-     * @param  string $key
-     * @param  string $default
-     * @return string
+     * @param $key
+     * @param $default
+     * @return mixed
      */
     public function get($key, $default = null)
     {
@@ -100,8 +97,8 @@ class MetaTag
     }
 
     /**
-     * @param  string $key
-     * @param  string $value
+     * @param $key
+     * @param $value
      * @return string
      */
     public function set($key, $value = null)
@@ -114,7 +111,7 @@ class MetaTag
             return $this->$method($value);
         }
 
-        return $this->metas[$key] = self::cut($value, $key);
+        return $this->metas[$key] = $this->cut($value, $key);
     }
 
     /**
@@ -303,7 +300,7 @@ class MetaTag
         if (is_string($key) && isset($this->config[$key.'_limit'])) {
             $limit = $this->config[$key.'_limit'];
         }
-        else if (is_integer($key)) {
+        else if (is_numeric($key)) {
             $limit = $key;
         }
         else {

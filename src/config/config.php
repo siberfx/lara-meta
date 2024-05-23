@@ -54,8 +54,8 @@ return array(
 
     'twitter' => [
         'card' => 'summary',
-        'creator' => '@mysite',
-        'site' => '@mysite'
+        'creator' => '@siberfx',
+        'site' => '@siberfx'
     ],
 
     /*
