@@ -20,25 +20,15 @@ From the command line run
 $ composer require siberfx/lara-meta
 ```
 
-## Laravel 7+ versions are supported
-
-```php
-'providers' => array(
-
-    Siberfx\LaraMeta\MetaTagsServiceProvider::class,
-
-)
-```
-
 Meta Tags also ships with a facade which provides the static syntax for creating collections. You can register the
-facade in the `aliases` key of your `config/app.php` file.
+facade in the `aliases` key of your `config/app.php` file if its Laravel 10.x.
 
 ```php
-'aliases' => array(
-
+'aliases' => [
+    // ...
     'MetaTag'   => Siberfx\LaraMeta\Facades\MetaTag::class,
 
-)
+]
 ```
 
 ### Publish the configurations
