@@ -22,7 +22,7 @@ class MetaTag
     /**
      * @var string
      */
-    private $defaultLocale = '';
+    private string $defaultLocale = '';
 
     /**
      * @var array
