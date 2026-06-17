@@ -9,7 +9,7 @@ return array(
      |
      */
 
-    'title' => config('app.name'),
+    'title' => env('APP_NAME', 'Laravel'),
 
     /*
      |--------------------------------------------------------------------------
@@ -41,7 +41,7 @@ return array(
      */
 
     'open_graph' => [
-        'site_name' => config('app.name'),
+        'site_name' => env('APP_NAME', 'Laravel'),
         'type' => 'website'
     ],
 

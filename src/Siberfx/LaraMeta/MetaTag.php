@@ -65,15 +65,16 @@ class MetaTag
         $this->config = $config;
 
         // Set defaults
-        $this->set('title', $this->config['title']);
+        $this->set('title', Arr::get($this->config, 'title', ''));
         $this->set('url', $this->request->url());
 
         // Set default locale
         $this->defaultLocale = $defaultLocale;
 
         // Is locales a callback
-        if (is_callable($this->config['locales'])) {
-            $this->setLocales(call_user_func($this->config['locales']));
+        $locales = Arr::get($this->config, 'locales');
+        if (is_callable($locales)) {
+            $this->setLocales(call_user_func($locales));
         }
     }
 
@@ -93,7 +94,7 @@ class MetaTag
      */
     public function get($key, $default = null)
     {
-        return array_get($this->metas, $key, $default);
+        return Arr::get($this->metas, $key, $default);
     }
 
     /**
@@ -141,7 +142,7 @@ class MetaTag
             'href' => $this->request->url()
         ]);
 
-        foreach ($this->config['locales'] as $value)
+        foreach (Arr::get($this->config, 'locales', []) as $value)
         {
             // Turn current URL into a localized URL
             // using the given lang code
@@ -174,7 +175,7 @@ class MetaTag
         foreach ($this->og as $tag)
         {
             // Get value for tag, default to dynamically set value
-            $value = array_get($this->config['open_graph'], $tag, $this->get($tag));
+            $value = Arr::get(Arr::get($this->config, 'open_graph', []), $tag, $this->get($tag));
 
             if ($value) {
                 $html[$tag] = $this->createTag([
@@ -212,7 +213,7 @@ class MetaTag
         foreach ($this->twitter as $tag)
         {
             // Get value for tag, default to dynamically set value
-            $value = array_get($this->config['twitter'], $tag, $this->get($tag));
+            $value = Arr::get(Arr::get($this->config, 'twitter', []), $tag, $this->get($tag));
 
             if ($value && !isset($html[$tag])) {
                 $html[$tag] = $this->createTag([
@@ -248,10 +249,11 @@ class MetaTag
     private function setTitle($value)
     {
         $title = $this->title;
+        $titleLimit = Arr::get($this->config, 'title_limit');
 
-        if ($title && $this->config['title_limit']) {
+        if ($title && $titleLimit) {
             $title = ' - '.$title;
-            $limit = $this->config['title_limit'] - strlen($title);
+            $limit = $titleLimit - strlen($title);
         }
         else {
             $limit = 'title';
@@ -284,6 +286,8 @@ class MetaTag
      */
     private function fix($text)
     {
+        $text = (string) ($text ?? '');
+
         $text = preg_replace('/<[^>]+>/', ' ', $text);
         $text = preg_replace('/[\r\n\s]+/', ' ', $text);
 
@@ -345,7 +349,7 @@ class MetaTag
         $url = str_replace(
             ['[scheme]', '[locale]', '[host]', '[uri]'],
             [$scheme, $locale, $host, $uri],
-            $this->config['locale_url']
+            Arr::get($this->config, 'locale_url', '[scheme]://[locale][host][uri]')
         );
 
         return url($url);

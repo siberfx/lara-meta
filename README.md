@@ -20,26 +20,26 @@ From the command line run
 $ composer require siberfx/lara-meta
 ```
 
-Meta Tags also ships with a facade which provides the static syntax for creating collections. You can register the
-facade in the `aliases` key of your `config/app.php` file if its Laravel 10.x.
-
-```php
-'aliases' => [
-    // ...
-    'MetaTag'   => Siberfx\LaraMeta\Facades\MetaTag::class,
-
-]
-```
+The service provider and the `MetaTag` facade are auto-discovered, so no manual registration is required on
+Laravel 12 / 13. The package configuration is merged automatically, so the package works out of the box without
+publishing anything.
 
 ### Publish the configurations
 
-Run this on the command line from the root of your project:
+Publishing is only needed if you want to customise the defaults. Run this on the command line from the root of
+your project:
+
+```
+$ php artisan vendor:publish --tag=meta-tags-config
+```
+
+or, equivalently:
 
 ```
 $ php artisan vendor:publish --provider="Siberfx\LaraMeta\MetaTagsServiceProvider"
 ```
 
-A configuration file will be publish to `config/meta-tags.php`.
+A configuration file will be published to `config/meta-tags.php`.
 
 ## Twitter Cards and OpenGraph
 

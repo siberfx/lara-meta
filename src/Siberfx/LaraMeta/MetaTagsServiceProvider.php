@@ -7,24 +7,22 @@ use Illuminate\Support\ServiceProvider;
 class MetaTagsServiceProvider extends ServiceProvider
 {
     /**
-     * Indicates if loading of the provider is deferred.
+     * Path to the packaged configuration file.
      *
-     * @var bool
+     * @var string
      */
-    protected $defer = true;
-    
-    protected $packageName = 'LaraMeta';
+    protected string $configPath = __DIR__ . '/../../config/config.php';
 
     /**
      * Bootstrap the application events.
      *
      * @return void
      */
-    public function boot()
+    public function boot(): void
     {
         $this->publishes([
-            __DIR__ . '/../../config/config.php' => config_path('meta-tags.php')
-        ]);
+            $this->configPath => config_path('meta-tags.php'),
+        ], 'meta-tags-config');
     }
 
     /**
@@ -32,16 +30,21 @@ class MetaTagsServiceProvider extends ServiceProvider
      *
      * @return void
      */
-    public function register()
+    public function register(): void
     {
-        // $this->app['metatag'] = $this->app->share(function ($app) { // Removed to support laravel 5.4
-       $this->app->singleton('metatag', function ($app) {
+        // Merge the package config so values are available out of the box,
+        // even before the user publishes their own copy.
+        $this->mergeConfigFrom($this->configPath, 'meta-tags');
+
+        $this->app->singleton('metatag', function ($app) {
             return new MetaTag(
                 $app['request'],
-                $app['config']['meta-tags'],
-                $app['config']->get('app.locale')
+                $app['config']->get('meta-tags', []),
+                $app['config']->get('app.locale', 'en')
             );
         });
+
+        $this->app->alias('metatag', MetaTag::class);
     }
 
     /**
@@ -49,8 +52,8 @@ class MetaTagsServiceProvider extends ServiceProvider
      *
      * @return array
      */
-    public function provides()
+    public function provides(): array
     {
-        return ['metatag'];
+        return ['metatag', MetaTag::class];
     }
 }

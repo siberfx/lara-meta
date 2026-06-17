@@ -20,8 +20,7 @@
   "require": {
     "php": "^8.4",
     "illuminate/support": "^12|^13",
-    "illuminate/http": "^12|^13",
-    "laravel/helpers": "^1.8"
+    "illuminate/http": "^12|^13"
   },
   "extra": {
     "laravel": {
