@@ -7,7 +7,7 @@
     "head",
     "laravel"
   ],
-  "description": "A package to manage Header Meta Tags for Laravel 10+",
+  "description": "A package to manage Header Meta Tags for Laravel 12+",
   "license": "MIT",
   "authors": [
     {
@@ -19,9 +19,9 @@
   "minimum-stability": "stable",
   "require": {
     "php": "^8.4",
-    "illuminate/support": "^10|^11|^12|^13",
-    "illuminate/http": "^10|^11|^12|^13",
-    "laravel/helpers": "^1.6"
+    "illuminate/support": "^12|^13",
+    "illuminate/http": "^12|^13",
+    "laravel/helpers": "^1.8"
   },
   "extra": {
     "laravel": {
