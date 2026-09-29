@@ -3,7 +3,42 @@
 All notable changes to `siberfx/lara-meta` are documented here. This project adheres to
 [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
-## [Unreleased]
+## [Unreleased] — proposed 8.0.0
+
+Officially supports **PHP 8.4 and 8.5** on **Laravel 12 and 13**, and modernises the codebase.
+
+### Added
+- Publishable `DefaultMetaTags` middleware for site-wide defaults, published to
+  `app/Http/Middleware/DefaultMetaTags.php` with `--tag=meta-tags-middleware`.
+- `--tag=meta-tags` publishes the config and the middleware together.
+- `has(string $key)` and `forget(string $key)`.
+- Read-only properties: `$metas`, `$locales` (asymmetric visibility), `$title` (property hook) and `$defaultLocale`.
+- `OpenGraphTag` and `TwitterCardTag` enums describing the rendered properties.
+- `@method` annotations on the facade for IDE autocompletion.
+- Test suite (PHPUnit + Orchestra Testbench), PHPStan level max (Larastan), Pint, and a GitHub Actions
+  matrix for PHP 8.4 / 8.5 × Laravel 12 / 13 (lowest and stable dependencies).
+
+### Changed
+- `composer.json` constrains PHP to `~8.4.0 || ~8.5.0` and requires `ext-mbstring`.
+- The service is bound **scoped** instead of as a singleton, so meta data and the captured `Request` never
+  leak between requests under Octane or queue workers. The `metatag` container key is kept as an alias.
+- Values are stored raw (HTML stripped, whitespace collapsed) and HTML-escaped at render time.
+  `get()` now returns `"` instead of `&quot;`, so `{{ MetaTag::get('title') }}` no longer double-escapes.
+  `&`, `<` and `'` in rendered attributes are now escaped as well. Existing entities are not re-encoded.
+- Length limits are multibyte-safe (`mb_*`), so Turkish and other non-ASCII text is never cut mid-character.
+- All classes use `declare(strict_types=1)`, typed signatures, constructor promotion and `#[\Override]`.
+- The config file is only registered for publishing when running in the console.
+
+### Fixed
+- `hreflang` URLs on single-label hosts (e.g. `localhost`) no longer get a leading dot (`.localhost`).
+- `set('locales', …)` no longer triggers a `TypeError` through the old magic `set{Key}()` dispatch.
+
+### Removed
+- The internal magic `set{Key}()` dispatch and the unused private `setTitle()` suffix logic. Titles are limited by
+  `title_limit` exactly as before.
+- `provides()` on the service provider (it had no effect because the provider is not deferred).
+
+## [7.2.0]
 
 ### Added
 - Config is now merged automatically via `mergeConfigFrom`, so the package works out of the box

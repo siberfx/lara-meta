@@ -1,357 +1,267 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Siberfx\LaraMeta;
 
 use Illuminate\Http\Request;
-use Illuminate\Support\Arr;
+use Siberfx\LaraMeta\Enums\OpenGraphTag;
+use Siberfx\LaraMeta\Enums\TwitterCardTag;
+use Stringable;
 
+/**
+ * Collects page meta data during a request and renders it as HTML meta tags.
+ *
+ * Values are sanitised when stored (markup stripped, whitespace collapsed,
+ * length-limited per config) and HTML-escaped when rendered.
+ */
 class MetaTag
 {
+    public const string DEFAULT_LOCALE_URL = '[scheme]://[locale][host][uri]';
+
     /**
-     * Instance of request
+     * Meta values set for the current request, keyed by name.
      *
-     * @var Request
+     * @var array<string, string>
      */
-    private $request;
+    public private(set) array $metas = [];
 
     /**
-     * @var array
-     */
-    private $config = [];
-
-    /**
-     * @var string
-     */
-    private string $defaultLocale = '';
-
-    /**
-     * @var array
-     */
-    private $metas = [];
-
-    /**
-     * @var
-     */
-    private $title;
-
-    /**
-     * OpenGraph elements
+     * Locale codes used to build `hreflang` alternate links.
      *
-     * @var array
+     * @var list<string>
      */
-    private $og = [
-        'title', 'description', 'type', 'image', 'url', 'audio',
-        'determiner', 'locale', 'site_name', 'video'
-    ];
+    public private(set) array $locales = [];
 
     /**
-     * Twitter card elements
-     *
-     * @var array
+     * The current page title (shortcut for `get('title', '')`).
      */
-    private $twitter = [
-        'card', 'site', 'title', 'description',
-        'creator', 'image:src', 'domain'
-    ];
+    public string $title {
+        get => $this->get('title', '');
+    }
 
     /**
-     * @param Request $request
-     * @param array $config
-     * @param string $defaultLocale
+     * @param  array<array-key, mixed>  $config
      */
-    public function __construct(Request $request, array $config = [], string $defaultLocale = 'en')
-    {
-        $this->request = $request;
-        $this->config = $config;
-
-        // Set defaults
-        $this->set('title', Arr::get($this->config, 'title', ''));
+    public function __construct(
+        private readonly Request $request,
+        private readonly array $config = [],
+        public readonly string $defaultLocale = 'en',
+    ) {
+        $this->set('title', $this->configString('title'));
         $this->set('url', $this->request->url());
 
-        // Set default locale
-        $this->defaultLocale = $defaultLocale;
+        $locales = $this->config['locales'] ?? [];
+        $locales = is_callable($locales) ? $locales() : $locales;
 
-        // Is locales a callback
-        $locales = Arr::get($this->config, 'locales');
-        if (is_callable($locales)) {
-            $this->setLocales(call_user_func($locales));
-        }
+        $this->setLocales(is_iterable($locales) ? $locales : []);
     }
 
     /**
-     * @param array $locals
-     * @return void
+     * @param  iterable<mixed>  $locales
      */
-    public function setLocales(array $locals = []): void
+    public function setLocales(iterable $locales = []): void
     {
-        $this->config['locales'] = $locals;
+        $this->locales = array_values(array_map(
+            static fn (string|int|float|bool $locale): string => (string) $locale,
+            array_filter([...$locales], is_scalar(...)),
+        ));
     }
 
     /**
-     * @param $key
-     * @param $default
-     * @return mixed
-     */
-    public function get($key, $default = null)
-    {
-        return Arr::get($this->metas, $key, $default);
-    }
-
-    /**
-     * @param $key
-     * @param $value
-     * @return string
-     */
-    public function set($key, $value = null)
-    {
-        $value = $this->fix($value);
-
-        $method = 'set'.$key;
-
-        if (method_exists($this, $method)) {
-            return $this->$method($value);
-        }
-
-        return $this->metas[$key] = $this->cut($value, $key);
-    }
-
-    /**
-     * Create a tag based on the given key
+     * @template TDefault of string|null
      *
-     * @param  string $key
-     * @param  string $value
-     * @return string
+     * @param  TDefault  $default
+     * @return string|TDefault
      */
-    public function tag($key, $value = '')
+    public function get(string $key, ?string $default = null): ?string
     {
+        return $this->metas[$key] ?? $default;
+    }
+
+    /**
+     * Store a meta value and return the sanitised, length-limited result.
+     */
+    public function set(string $key, string|Stringable|int|float|null $value = null): string
+    {
+        return $this->metas[$key] = $this->limit($this->sanitize($value), $this->limitFor($key));
+    }
+
+    public function has(string $key): bool
+    {
+        return ($this->metas[$key] ?? '') !== '';
+    }
+
+    public function forget(string $key): void
+    {
+        unset($this->metas[$key]);
+    }
+
+    /**
+     * Render a `<meta name="…">` tag, using the stored value unless one is given.
+     */
+    public function tag(string $key, string|Stringable|null $value = ''): string
+    {
+        $content = (string) $value;
+
         return $this->createTag([
             'name' => $key,
-            'content' => $value ?: Arr::get($this->metas, $key, ''),
+            'content' => $content !== '' ? $content : $this->get($key, ''),
         ]);
     }
 
     /**
-     * Create canonical tags
-     *
-     * @return string
+     * Render the canonical link plus one `hreflang` alternate per locale.
      */
-    public function canonical()
+    public function canonical(): string
     {
-        $html = $this->createTag([
-            'rel' => 'canonical',
-            'href' => $this->request->url()
-        ]);
+        $html = $this->createTag(['rel' => 'canonical', 'href' => $this->request->url()]);
 
-        foreach (Arr::get($this->config, 'locales', []) as $value)
-        {
-            // Turn current URL into a localized URL
-            // using the given lang code
-            $url = $this->localizedURL($value);
-
+        foreach ($this->locales as $locale) {
             $html .= $this->createTag([
                 'rel' => 'alternate',
-                'hreflang' => $value,
-                'href' => $url
+                'hreflang' => $locale,
+                'href' => $this->localizedUrl($locale),
             ]);
         }
 
         return $html;
     }
 
-    /**
-     * Create open graph tags
-     *
-     * @return string
-     */
-    public function openGraph()
+    public function openGraph(): string
     {
         $html = [
-            'url' => $this->createTag([
-                'property' => 'og:url',
-                'content' => $this->request->url()
-            ])
+            OpenGraphTag::Url->value => $this->createTag([
+                'property' => OpenGraphTag::Url->property(),
+                'content' => $this->request->url(),
+            ]),
         ];
 
-        foreach ($this->og as $tag)
-        {
-            // Get value for tag, default to dynamically set value
-            $value = Arr::get(Arr::get($this->config, 'open_graph', []), $tag, $this->get($tag));
+        foreach (OpenGraphTag::cases() as $tag) {
+            $value = $this->resolve('open_graph', $tag->value);
 
-            if ($value) {
-                $html[$tag] = $this->createTag([
-                    'property' => "og:{$tag}",
-                    'content' => $value
-                ]);
+            if ($value !== '') {
+                $html[$tag->value] = $this->createTag(['property' => $tag->property(), 'content' => $value]);
             }
         }
 
         return implode('', $html);
     }
 
-    /**
-     * Create Facebook app ID tag
-     *
-     * @return string
-     */
-    public function fbAppId()
+    public function fbAppId(): string
     {
         return $this->createTag([
             'property' => 'fb:app_id',
-            'content' => $this->get('fb:app_id'),
+            'content' => $this->get('fb:app_id', ''),
         ]);
     }
 
-    /**
-     * Create twitter card tags
-     *
-     * @return string
-     */
-    public function twitterCard()
+    public function twitterCard(): string
     {
+        $fallbacks = [
+            TwitterCardTag::ImageSrc->value => $this->get('image', ''),
+            TwitterCardTag::Domain->value => $this->request->getHttpHost(),
+        ];
+
         $html = [];
 
-        foreach ($this->twitter as $tag)
-        {
-            // Get value for tag, default to dynamically set value
-            $value = Arr::get(Arr::get($this->config, 'twitter', []), $tag, $this->get($tag));
+        foreach (TwitterCardTag::cases() as $tag) {
+            $value = $this->resolve('twitter', $tag->value);
+            $value = $value !== '' ? $value : ($fallbacks[$tag->value] ?? '');
 
-            if ($value && !isset($html[$tag])) {
-                $html[$tag] = $this->createTag([
-                    'name' => "twitter:{$tag}",
-                    'content' => $value
-                ]);
+            if ($value !== '') {
+                $html[] = $this->createTag(['name' => $tag->property(), 'content' => $value]);
             }
-        }
-
-        // Set image
-        if (empty($html['image:src']) && $this->get('image')) {
-            $html['image:src'] = $this->createTag([
-                'name' => "twitter:image:src",
-                'content' => $this->get('image')
-            ]);
-        }
-
-        // Set domain
-        if (empty($html['domain'])) {
-            $html['domain'] = $this->createTag([
-                'name' => "twitter:domain",
-                'content' => $this->request->getHttpHost()
-            ]);
         }
 
         return implode('', $html);
     }
 
     /**
-     * @param  string $value
-     * @return string
+     * Resolve a tag value: the config group wins, otherwise the value set at runtime.
      */
-    private function setTitle($value)
+    private function resolve(string $group, string $key): string
     {
-        $title = $this->title;
-        $titleLimit = Arr::get($this->config, 'title_limit');
+        $values = $this->config[$group] ?? [];
+        $configured = is_array($values) ? ($values[$key] ?? null) : null;
 
-        if ($title && $titleLimit) {
-            $title = ' - '.$title;
-            $limit = $titleLimit - strlen($title);
-        }
-        else {
-            $limit = 'title';
-        }
-
-        return $this->metas['title'] = self::cut($value, $limit).$title;
+        return is_scalar($configured) && (string) $configured !== ''
+            ? (string) $configured
+            : $this->get($key, '');
     }
 
     /**
-     * Create meta tag from attributes
-     *
-     * @param  array $values
-     * @return string
+     * @param  array<string, string>  $attributes
      */
-    private function createTag(array $values)
+    private function createTag(array $attributes): string
     {
-        $attributes = array_map(function($key) use ($values) {
-            $value = $this->fix($values[$key]);
-            return "{$key}=\"{$value}\"";
-        }, array_keys($values));
+        $pairs = array_map(
+            fn (string $name, string $value): string => sprintf('%s="%s"', $name, $this->escape($this->sanitize($value))),
+            array_keys($attributes),
+            $attributes,
+        );
 
-        $attributes = implode(' ', $attributes);
+        return '<meta '.implode(' ', $pairs).">\n    ";
+    }
 
-        return "<meta {$attributes}>\n    ";
+    private function sanitize(string|Stringable|int|float|null $text): string
+    {
+        $text = preg_replace('/<[^>]+>/', ' ', (string) $text) ?? '';
+
+        return trim(preg_replace('/\s+/u', ' ', $text) ?? $text);
+    }
+
+    private function escape(string $text): string
+    {
+        return htmlspecialchars($text, ENT_QUOTES | ENT_SUBSTITUTE | ENT_HTML5, 'UTF-8', double_encode: false);
+    }
+
+    private function limitFor(string $key): ?int
+    {
+        $limit = $this->config["{$key}_limit"] ?? null;
+
+        return is_numeric($limit) ? (int) $limit : null;
     }
 
     /**
-     * @param  string $text
-     * @return string
+     * Truncate on a word boundary (multibyte-safe) and append an ellipsis.
      */
-    private function fix($text)
+    private function limit(string $text, ?int $limit): string
     {
-        $text = (string) ($text ?? '');
-
-        $text = preg_replace('/<[^>]+>/', ' ', $text);
-        $text = preg_replace('/[\r\n\s]+/', ' ', $text);
-
-        return trim(str_replace('"', '&quot;', $text));
-    }
-
-    /**
-     * @param  string $text
-     * @param  string $key
-     * @return string
-     */
-    private function cut($text, $key)
-    {
-        if (is_string($key) && isset($this->config[$key.'_limit'])) {
-            $limit = $this->config[$key.'_limit'];
-        }
-        else if (is_numeric($key)) {
-            $limit = $key;
-        }
-        else {
+        if ($limit === null || $limit <= 0 || mb_strlen($text) <= $limit) {
             return $text;
         }
 
-        $length = strlen($text);
+        $text = mb_substr($text, 0, max($limit - 3, 0));
+        $space = mb_strrpos($text, ' ');
 
-        if ($length <= (int) $limit) {
-            return $text;
-        }
-
-        $text = substr($text, 0, ($limit -= 3));
-
-        if ($space = strrpos($text, ' ')) {
-            $text = substr($text, 0, $space);
+        if ($space) {
+            $text = mb_substr($text, 0, $space);
         }
 
         return $text.'...';
     }
 
     /**
-     * Returns an URL adapted to locale
-     *
-     * @param  string $locale
-     * @return string
+     * Build the URL of the current page for the given locale. The default
+     * locale is served from the bare host, others from a `{locale}.` subdomain.
      */
-    private function localizedURL($locale)
+    private function localizedUrl(string $locale): string
     {
-        // Default language doesn't get a special subdomain
-        $locale = ($locale !== $this->defaultLocale) ? strtolower($locale).'.' : '';
+        $hostParts = explode('.', $this->request->getHttpHost());
 
-        // URL elements
-        $uri = $this->request->getRequestUri();
-        $scheme = $this->request->getScheme();
+        return strtr($this->configString('locale_url', self::DEFAULT_LOCALE_URL), [
+            '[scheme]' => $this->request->getScheme(),
+            '[locale]' => $locale === $this->defaultLocale ? '' : strtolower($locale).'.',
+            '[host]' => implode('.', array_slice($hostParts, -2)),
+            '[uri]' => $this->request->getRequestUri(),
+        ]);
+    }
 
-        // Get host
-        $array = explode('.', $this->request->getHttpHost());
-        $host = (array_key_exists(count($array) - 2, $array) ? $array[count($array) - 2] : '').'.'.$array[count($array) - 1];
+    private function configString(string $key, string $default = ''): string
+    {
+        $value = $this->config[$key] ?? null;
 
-        // Create URL from template
-        $url = str_replace(
-            ['[scheme]', '[locale]', '[host]', '[uri]'],
-            [$scheme, $locale, $host, $uri],
-            Arr::get($this->config, 'locale_url', '[scheme]://[locale][host][uri]')
-        );
-
-        return url($url);
+        return is_scalar($value) ? (string) $value : $default;
     }
 }

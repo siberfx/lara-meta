@@ -1,5 +1,10 @@
 /vendor
 /.idea
+/.vscode
+/.phpunit.cache
+/build
 composer.phar
 composer.lock
+phpunit.xml
+phpstan.neon
 .DS_Store

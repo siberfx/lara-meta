@@ -1,40 +1,71 @@
 {
-  "name": "siberfx/lara-meta",
-  "keywords": [
-    "meta tags",
-    "meta",
-    "tags",
-    "head",
-    "laravel"
-  ],
-  "description": "A package to manage Header Meta Tags for Laravel 12+",
-  "license": "MIT",
-  "authors": [
-    {
-      "name": "Selim GORMUS",
-      "email": "info@siberfx.com",
-      "homepage": "https://siberfx.com"
-    }
-  ],
-  "minimum-stability": "stable",
-  "require": {
-    "php": "^8.4",
-    "illuminate/support": "^12|^13",
-    "illuminate/http": "^12|^13"
-  },
-  "extra": {
-    "laravel": {
-      "providers": [
-        "Siberfx\\LaraMeta\\MetaTagsServiceProvider"
-      ],
-      "aliases": {
-        "MetaTag": "Siberfx\\LaraMeta\\Facades\\MetaTag"
-      }
-    }
-  },
-  "autoload": {
-    "psr-4": {
-      "Siberfx\\LaraMeta\\": "src/Siberfx/LaraMeta/"
-    }
-  }
+    "name": "siberfx/lara-meta",
+    "description": "Manage page title, meta, OpenGraph, Twitter card and hreflang tags in Laravel 12+.",
+    "keywords": [
+        "laravel",
+        "meta tags",
+        "meta",
+        "seo",
+        "opengraph",
+        "twitter card",
+        "hreflang",
+        "head"
+    ],
+    "homepage": "https://github.com/siberfx/lara-meta",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Selim GORMUS",
+            "email": "info@siberfx.com",
+            "homepage": "https://siberfx.com"
+        }
+    ],
+    "require": {
+        "php": "~8.4.0 || ~8.5.0",
+        "ext-mbstring": "*",
+        "illuminate/http": "^12.0 || ^13.0",
+        "illuminate/support": "^12.0 || ^13.0"
+    },
+    "require-dev": {
+        "larastan/larastan": "^3.0",
+        "laravel/pint": "^1.20",
+        "orchestra/testbench": "^10.0 || ^11.0",
+        "phpunit/phpunit": "^11.5 || ^12.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Siberfx\\LaraMeta\\": "src/Siberfx/LaraMeta/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Siberfx\\LaraMeta\\Tests\\": "tests/"
+        }
+    },
+    "scripts": {
+        "test": "phpunit",
+        "analyse": "phpstan analyse --memory-limit=512M",
+        "format": "pint",
+        "lint": "pint --test",
+        "ci": [
+            "@lint",
+            "@analyse",
+            "@test"
+        ]
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Siberfx\\LaraMeta\\MetaTagsServiceProvider"
+            ],
+            "aliases": {
+                "MetaTag": "Siberfx\\LaraMeta\\Facades\\MetaTag"
+            }
+        }
+    },
+    "config": {
+        "sort-packages": true
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
 }

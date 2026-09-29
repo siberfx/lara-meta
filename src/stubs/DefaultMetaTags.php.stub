@@ -1,0 +1,34 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Http\Middleware;
+
+use Closure;
+use Illuminate\Http\Request;
+use Siberfx\LaraMeta\Facades\MetaTag;
+use Symfony\Component\HttpFoundation\Response;
+
+/**
+ * Site-wide meta tag defaults. Controllers run after this middleware,
+ * so anything they set with MetaTag::set() overrides these values.
+ *
+ * Register it on the "web" group in bootstrap/app.php:
+ *
+ *     ->withMiddleware(function (Middleware $middleware): void {
+ *         $middleware->web(append: [
+ *             \App\Http\Middleware\DefaultMetaTags::class,
+ *         ]);
+ *     })
+ */
+final class DefaultMetaTags
+{
+    public function handle(Request $request, Closure $next): Response
+    {
+        MetaTag::set('description', config('app.name').' — replace this with your default description.');
+        MetaTag::set('image', asset('images/share-default.png'));
+        MetaTag::set('robots', app()->isProduction() ? 'index,follow' : 'noindex,nofollow');
+
+        return $next($request);
+    }
+}

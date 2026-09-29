@@ -1,0 +1,15 @@
+includes:
+    - vendor/larastan/larastan/extension.neon
+
+parameters:
+    level: max
+    paths:
+        - src
+        - tests
+    scanFiles:
+        - src/stubs/DefaultMetaTags.php.stub
+    ignoreErrors:
+        # Package config is merged into the app config, so env() is resolved and cached with it.
+        -
+            identifier: larastan.noEnvCallsOutsideOfConfig
+            path: src/config/config.php
