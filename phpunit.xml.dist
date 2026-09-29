@@ -16,7 +16,8 @@
             <directory>tests/Feature</directory>
         </testsuite>
     </testsuites>
-    <source>
+    <!-- Fail on deprecations our code triggers, not on ones raised inside vendor packages. -->
+    <source ignoreIndirectDeprecations="true">
         <include>
             <directory>src</directory>
         </include>

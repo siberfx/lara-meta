@@ -9,10 +9,10 @@ jobs:
     quality:
         runs-on: ubuntu-latest
         steps:
-            - uses: actions/checkout@v4
+            - uses: actions/checkout@v5
             - uses: shivammathur/setup-php@v2
               with:
-                  php: '8.4'
+                  php-version: '8.4'
                   coverage: none
             - run: composer update --prefer-dist --no-interaction --no-progress
             - run: composer lint
@@ -35,12 +35,13 @@ jobs:
         name: PHP ${{ matrix.php }} / Laravel ${{ matrix.laravel }} / ${{ matrix.stability }}
 
         steps:
-            - uses: actions/checkout@v4
+            - uses: actions/checkout@v5
             - uses: shivammathur/setup-php@v2
               with:
-                  php: ${{ matrix.php }}
+                  php-version: ${{ matrix.php }}
                   extensions: mbstring
                   coverage: none
+            - run: php -v
             - run: |
                   composer require "illuminate/support:${{ matrix.laravel }}" "illuminate/http:${{ matrix.laravel }}" --no-interaction --no-update
                   composer require --dev "orchestra/testbench:${{ matrix.testbench }}" --no-interaction --no-update
