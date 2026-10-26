@@ -14,7 +14,7 @@ jobs:
                 php: ['8.4', '8.5']
         name: Lint and static analysis / PHP ${{ matrix.php }}
         steps:
-            - uses: actions/checkout@v5
+            - uses: actions/checkout@v7
             - uses: shivammathur/setup-php@v2
               with:
                   php-version: ${{ matrix.php }}
@@ -40,7 +40,7 @@ jobs:
         name: PHP ${{ matrix.php }} / Laravel ${{ matrix.laravel }} / ${{ matrix.stability }}
 
         steps:
-            - uses: actions/checkout@v5
+            - uses: actions/checkout@v7
             - uses: shivammathur/setup-php@v2
               with:
                   php-version: ${{ matrix.php }}
@@ -56,7 +56,7 @@ jobs:
     coverage:
         runs-on: ubuntu-latest
         steps:
-            - uses: actions/checkout@v5
+            - uses: actions/checkout@v7
             - uses: shivammathur/setup-php@v2
               with:
                   php-version: '8.5'
