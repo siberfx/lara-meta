@@ -21,7 +21,7 @@
         }
     ],
     "require": {
-        "php": "~8.4.0 || ~8.5.0",
+        "php": "^8.4",
         "ext-mbstring": "*",
         "illuminate/http": "^12.0 || ^13.30",
         "illuminate/support": "^12.0 || ^13.30"

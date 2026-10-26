@@ -40,7 +40,7 @@ controllers, then render them in your layout with one line each.
 
 | Package | PHP        | Laravel    |
 | ------- | ---------- | ---------- |
-| 8.x     | 8.4 – 8.5  | 12.x, 13.x |
+| 7.4+    | 8.4 – 8.5  | 12.x, 13.x |
 
 Every PHP / Laravel combination below is tested in CI, against both the lowest and the latest allowed dependencies.
 
@@ -186,6 +186,26 @@ $meta->locales;        // ['en', 'tr']
 $meta->defaultLocale;  // the app locale, e.g. 'en'
 ```
 
+### Automatic defaults
+
+Out of the box the package appends a middleware to the `web` group that applies the `defaults` config
+(any meta key) and a schema.org `WebSite` JSON-LD document before your controllers run, so `@metaTags` outputs
+JSON-LD with zero setup:
+
+```php
+// config/meta-tags.php
+'auto_middleware' => true,   // register the middleware on the "web" group
+'json_ld' => true,           // include the WebSite JSON-LD document
+'defaults' => [
+    'description' => 'Your default description.',
+    'robots' => 'index,follow',
+],
+```
+
+Set `json_ld` to `false` to drop the JSON-LD, or `auto_middleware` to `false` to turn everything off (for example
+when you use the published `DefaultMetaTags` middleware below). Identical JSON-LD documents are only rendered once,
+so using both is harmless.
+
 ### Site-wide defaults
 
 Set defaults once and let individual pages override them. Values set later win, so anything a controller sets
@@ -247,7 +267,17 @@ abstract class Controller
 
 ### Rendering tags
 
-Render tags with `{!! !!}` because the methods return ready-made, already-escaped HTML. A complete layout:
+**The short way.** Render the whole head block (title with optional suffix, description, robots, canonical +
+hreflang, OpenGraph, `fb:app_id`, Twitter card and JSON-LD) with one call:
+
+```blade
+<head>
+    <meta charset="utf-8">
+    @metaTags          {{-- or <x-meta-tags /> or {{ MetaTag::render() }} --}}
+</head>
+```
+
+**The explicit way.** Render individual tags with `{!! !!}` because the methods return ready-made, already-escaped HTML. A complete layout:
 
 ```blade
 {{-- resources/views/layouts/app.blade.php --}}
@@ -257,7 +287,7 @@ Render tags with `{!! !!}` because the methods return ready-made, already-escape
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <title>{{ MetaTag::get('title') }} · {{ config('app.name') }}</title>
+    {!! MetaTag::titleTag() !!}
 
     {!! MetaTag::tag('description') !!}
     {!! MetaTag::tag('keywords') !!}
@@ -318,6 +348,34 @@ unescaped you never get double encoding (`&amp;quot;`).
     @include('partials.meta')
 </head>
 ```
+
+### Title suffix
+
+Set `title_suffix` (and optionally `title_separator`, default `' | '`) in the config and `titleTag()` renders
+`<title>Hello | My Site</title>`. `fullTitle()` returns the same text as a string. `title_limit` only applies to the
+page part. The suffix is skipped when the title equals it (e.g. on the home page).
+
+### Robots
+
+```php
+MetaTag::noindex();                 // noindex,nofollow
+MetaTag::noindex(follow: true);     // noindex,follow
+MetaTag::index();                   // index,follow
+```
+
+### JSON-LD structured data
+
+```php
+MetaTag::addJsonLd([
+    '@type' => 'Article',
+    'headline' => $post->title,
+    'datePublished' => $post->published_at->toIso8601String(),
+]);
+```
+
+`@context` defaults to `https://schema.org`. Each document renders as a `<script type="application/ld+json">`
+(`</script>` and `&` are hex-escaped, so user content cannot break out). Render with `{!! MetaTag::jsonLd() !!}`
+or let `@metaTags` include it.
 
 ### Title and description limits
 
@@ -444,7 +502,9 @@ MetaTag::set('fb:app_id', config('services.facebook.app_id'));
 
 ### Canonical and hreflang alternates
 
-`canonical()` renders the canonical URL of the current page followed by one alternate per configured locale:
+`canonical()` renders the canonical `<link>` (it honours a `url` set with `MetaTag::set('url', …)`), one
+`hreflang` alternate per configured locale and an `x-default` alternate for the default locale (disable with
+`'x_default' => false`):
 
 ```php
 // config/meta-tags.php
@@ -455,9 +515,10 @@ MetaTag::set('fb:app_id', config('services.facebook.app_id'));
 For a request to `https://www.example.com/blog/hello-world?page=2` with the app locale set to `en`:
 
 ```html
-<meta rel="canonical" href="https://www.example.com/blog/hello-world">
-<meta rel="alternate" hreflang="en" href="https://example.com/blog/hello-world?page=2">
-<meta rel="alternate" hreflang="tr" href="https://tr.example.com/blog/hello-world?page=2">
+<link rel="canonical" href="https://www.example.com/blog/hello-world">
+<link rel="alternate" hreflang="en" href="https://example.com/blog/hello-world?page=2">
+<link rel="alternate" hreflang="tr" href="https://tr.example.com/blog/hello-world?page=2">
+<link rel="alternate" hreflang="x-default" href="https://example.com/blog/hello-world?page=2">
 ```
 
 How the alternate URLs are built from `locale_url`:
@@ -466,24 +527,21 @@ How the alternate URLs are built from `locale_url`:
 | ----------- | -------------------------------------------------------------------------------------------- |
 | `[scheme]`  | `http` or `https`                                                                            |
 | `[locale]`  | Empty for the default locale (`app.locale`), otherwise the lower-cased locale plus a dot (`tr.`) |
-| `[host]`    | The last two labels of the host (`www.example.com` becomes `example.com`)                    |
+| `[lang]`    | The lower-cased locale code (`tr`), for path-based locales                                   |
+| `[host]`    | The host without a leading `www.` (`www.example.com` becomes `example.com`)                  |
 | `[uri]`     | The path and query string                                                                    |
 
-**Path-based locales** (`/tr/blog/...`) don't fit the template, because `[locale]` is designed for subdomains
-and always ends with a dot. Set `'locales' => []` and render the alternates yourself:
-
-```blade
-{!! MetaTag::canonical() !!}
-@foreach (['en', 'tr'] as $locale)
-    <link rel="alternate" hreflang="{{ $locale }}" href="{{ url($locale.'/'.request()->path()) }}">
-@endforeach
-```
-
-**Multi-part domains** such as `example.co.uk`: `[host]` keeps only the last two labels (`co.uk`), so hard-code
-the domain in the template instead:
+**Path-based locales** (`/tr/blog/...`): use `[lang]`:
 
 ```php
-'locale_url' => '[scheme]://[locale]example.co.uk[uri]',
+'locale_url' => '[scheme]://[host]/[lang][uri]',
+```
+
+**Full control**: resolve alternates with a closure (in a middleware or service provider `boot()` of your app,
+not in config, so `config:cache` keeps working):
+
+```php
+MetaTag::localizeUsing(fn (string $locale, Request $request): string => url("/{$locale}/".$request->path()));
 ```
 
 **Locales from your database or another package.** Set them at runtime in a middleware (not in a service
@@ -564,7 +622,12 @@ $this->assertSame('Hello World', MetaTag::get('title'));
 | `has(string $key)`                      | `bool`    | Whether a non-empty value is stored.                                        |
 | `forget(string $key)`                   | `void`    | Remove a value.                                                             |
 | `tag(string $key, $value = '')`         | `string`  | `<meta name="…" content="…">`, using `$value` when given.                   |
-| `canonical()`                           | `string`  | Canonical tag plus one `hreflang` alternate per locale.                     |
+| `canonical()`                           | `string`  | Canonical link, `hreflang` alternates per locale and `x-default`.           |
+| `render()` / `toHtml()`                 | `HtmlString` / `string` | The whole head block. Also available as `@metaTags` and `<x-meta-tags />`. |
+| `titleTag()` / `fullTitle()`            | `string`  | `<title>` element / title with the configured suffix.                       |
+| `noindex(bool $follow)` / `index(bool $follow)` | `void` | Set the `robots` value.                                              |
+| `addJsonLd(array $data)` / `jsonLd()`   | `void` / `string` | Queue / render JSON-LD documents.                                   |
+| `localizeUsing(?Closure $resolver)`     | `void`    | Resolve hreflang URLs with a callback instead of `locale_url`.              |
 | `openGraph()`                           | `string`  | `og:*` tags. Values in the `open_graph` config win over runtime values.     |
 | `twitterCard()`                         | `string`  | `twitter:*` tags. Values in the `twitter` config win over runtime values.   |
 | `fbAppId()`                             | `string`  | `fb:app_id` tag from the `fb:app_id` value.                                 |
@@ -586,8 +649,11 @@ Published to `config/meta-tags.php`:
 | `title`             | `APP_NAME`                                  | Default title until a page sets one.                                      |
 | `{key}_limit`       | `title_limit: 70`, `description_limit: 200` | Maximum length for any key; truncated on a word boundary with `...`.      |
 | `open_graph`        | `site_name`, `type`                         | Fixed OpenGraph values. They win over values set at runtime.              |
-| `twitter`           | `card`, `site`, `creator`                   | Fixed Twitter card values. They win over values set at runtime.           |
-| `locale_url`        | `[scheme]://[locale][host][uri]`            | Template for `hreflang` URLs. `[locale]` is empty for the default locale. |
+| `title_suffix`      | `''`                                        | Appended to the title by `titleTag()`; `title_separator` defaults to `' \| '`. |
+| `x_default`         | `true`                                      | Render the `hreflang="x-default"` alternate.                              |
+| `indent`            | `'    '`                                    | Whitespace written after every tag (`''` for compact output).             |
+| `twitter`           | `card`                                      | Fixed Twitter card values. They win over values set at runtime.           |
+| `locale_url`        | `[scheme]://[locale][host][uri]`            | Template (or closure) for `hreflang` URLs; also `[lang]`.                 |
 | `locales`           | `['en', 'tr']`                              | Locales for `hreflang` alternates, or a callable returning them.          |
 
 ## Testing the package

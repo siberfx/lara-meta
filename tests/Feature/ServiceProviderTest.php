@@ -9,6 +9,7 @@ use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Blade;
 use PHPUnit\Framework\Attributes\Test;
 use Siberfx\LaraMeta\Facades\MetaTag as MetaTagFacade;
+use Siberfx\LaraMeta\Http\Middleware\InjectDefaultMetaTags;
 use Siberfx\LaraMeta\MetaTag;
 use Siberfx\LaraMeta\MetaTagsServiceProvider;
 use Siberfx\LaraMeta\Tests\TestCase;
@@ -62,6 +63,19 @@ final class ServiceProviderTest extends TestCase
     }
 
     #[Test]
+    public function it_renders_through_the_blade_directive_and_component(): void
+    {
+        MetaTagFacade::set('title', 'Directive & Co');
+
+        $directive = Blade::render('@metaTags');
+        $component = Blade::render('<x-meta-tags />');
+
+        $this->assertStringContainsString('<title>Directive &amp; Co</title>', $directive);
+        $this->assertStringContainsString('<link rel="canonical"', $directive);
+        $this->assertStringContainsString('<title>Directive &amp; Co</title>', $component);
+    }
+
+    #[Test]
     public function it_registers_the_config_for_publishing(): void
     {
         $paths = MetaTagsServiceProvider::pathsToPublish(MetaTagsServiceProvider::class, 'meta-tags-config');
@@ -111,7 +125,41 @@ final class ServiceProviderTest extends TestCase
         $this->assertSame('Set by the controller', MetaTagFacade::get('description'));
         $this->assertStringEndsWith('images/share-default.png', (string) MetaTagFacade::get('image'));
         $this->assertSame('noindex,nofollow', MetaTagFacade::get('robots'));
+        $this->assertStringContainsString('"@type":"WebSite"', MetaTagFacade::jsonLd());
 
         @unlink($target);
+    }
+
+    #[Test]
+    public function the_default_middleware_is_registered_on_the_web_group(): void
+    {
+        $groups = app(\Illuminate\Contracts\Http\Kernel::class)->getMiddlewareGroups();
+
+        $this->assertTrue(in_array(InjectDefaultMetaTags::class, (array) ($groups['web'] ?? []), true));
+    }
+
+    #[Test]
+    public function it_injects_defaults_and_json_ld_into_web_responses(): void
+    {
+        config(['meta-tags.defaults' => ['description' => 'Default description']]);
+
+        \Illuminate\Support\Facades\Route::middleware('web')->get('/auto', static fn (): string => (string) MetaTagFacade::render());
+
+        $html = $this->get('/auto')->assertOk()->getContent();
+
+        $this->assertStringContainsString('content="Default description"', (string) $html);
+        $this->assertStringContainsString('"@type":"WebSite"', (string) $html);
+    }
+
+    #[Test]
+    public function the_automatic_middleware_can_be_disabled(): void
+    {
+        config(['meta-tags.auto_middleware' => false]);
+        $kernel = new \Illuminate\Foundation\Http\Kernel(app(), app('router'));
+        app()->instance(\Illuminate\Contracts\Http\Kernel::class, $kernel);
+
+        (new MetaTagsServiceProvider(app()))->boot();
+
+        $this->assertFalse(in_array(InjectDefaultMetaTags::class, (array) ($kernel->getMiddlewareGroups()['web'] ?? []), true));
     }
 }

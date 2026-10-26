@@ -15,15 +15,25 @@ enum OpenGraphTag: string
     case Description = 'description';
     case Type = 'type';
     case Image = 'image';
+    case ImageWidth = 'image:width';
+    case ImageHeight = 'image:height';
+    case ImageAlt = 'image:alt';
     case Url = 'url';
     case Audio = 'audio';
     case Determiner = 'determiner';
     case Locale = 'locale';
     case SiteName = 'site_name';
     case Video = 'video';
+    case ArticlePublishedTime = 'article:published_time';
+    case ArticleModifiedTime = 'article:modified_time';
+    case ArticleAuthor = 'article:author';
+    case ArticleSection = 'article:section';
 
+    /**
+     * The `property` attribute; `article:*` properties are not prefixed with `og:`.
+     */
     public function property(): string
     {
-        return "og:{$this->value}";
+        return str_starts_with($this->value, 'article:') ? $this->value : "og:{$this->value}";
     }
 }

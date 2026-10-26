@@ -37,7 +37,7 @@ final class MetaTagTest extends TestCase
 
         $this->assertSame('', $meta->title);
         $this->assertSame([], $meta->locales);
-        $this->assertSame("<meta rel=\"canonical\" href=\"https://www.example.com/blog/post\">\n    ", $meta->canonical());
+        $this->assertSame("<link rel=\"canonical\" href=\"https://www.example.com/blog/post\">\n    ", $meta->canonical());
     }
 
     #[Test]
@@ -125,9 +125,11 @@ final class MetaTagTest extends TestCase
 
         $html = $meta->canonical();
 
-        $this->assertStringContainsString('<meta rel="canonical" href="https://www.example.com/blog/post">', $html);
+        $this->assertStringContainsString('<link rel="canonical" href="https://www.example.com/blog/post">', $html);
         $this->assertStringContainsString('hreflang="en" href="https://example.com/blog/post?page=2"', $html);
         $this->assertStringContainsString('hreflang="TR" href="https://tr.example.com/blog/post?page=2"', $html);
+        $this->assertStringContainsString('<link rel="alternate" hreflang="x-default" href="https://example.com/blog/post?page=2">', $html);
+        $this->assertStringNotContainsString('<meta rel=', $html);
     }
 
     #[Test]
@@ -195,7 +197,7 @@ final class MetaTagTest extends TestCase
     #[Test]
     public function configured_twitter_values_override_fallbacks(): void
     {
-        $meta = $this->metaTag(['twitter' => ['domain' => 'acme.test', 'image:src' => 'https://acme.test/x.png']]);
+        $meta = $this->metaTag(['twitter' => ['domain' => 'acme.test', 'image' => 'https://acme.test/x.png', 'image:src' => 'https://acme.test/x.png']]);
         $meta->set('image', 'https://example.com/ignored.png');
 
         $html = $meta->twitterCard();
@@ -212,5 +214,135 @@ final class MetaTagTest extends TestCase
         $meta->set('fb:app_id', '123456');
 
         $this->assertSame("<meta property=\"fb:app_id\" content=\"123456\">\n    ", $meta->fbAppId());
+    }
+
+    #[Test]
+    public function x_default_can_be_disabled(): void
+    {
+        $meta = $this->metaTag(['locales' => ['en'], 'x_default' => false]);
+
+        $this->assertStringNotContainsString('x-default', $meta->canonical());
+    }
+
+    #[Test]
+    public function canonical_and_open_graph_honour_a_url_set_at_runtime(): void
+    {
+        $meta = $this->metaTag();
+        $meta->set('url', 'https://example.com/canonical-page');
+
+        $this->assertStringContainsString('href="https://example.com/canonical-page"', $meta->canonical());
+        $this->assertStringContainsString('og:url" content="https://example.com/canonical-page"', $meta->openGraph());
+    }
+
+    #[Test]
+    public function the_facebook_app_id_is_skipped_when_unset(): void
+    {
+        $this->assertSame('', $this->metaTag()->fbAppId());
+    }
+
+    #[Test]
+    public function it_resolves_alternates_with_a_closure_or_path_template(): void
+    {
+        $meta = $this->metaTag(['locales' => ['tr'], 'x_default' => false, 'locale_url' => '[scheme]://[host]/[lang][uri]'], 'https://www.example.co.uk/about');
+        $this->assertStringContainsString('href="https://example.co.uk/tr/about"', $meta->canonical());
+
+        $meta = $this->metaTag(['locales' => ['tr'], 'x_default' => false, 'locale_url' => static fn (string $l, Request $r): string => "https://x.test/{$l}".$r->getRequestUri()], 'https://example.com/about');
+        $this->assertStringContainsString('href="https://x.test/tr/about"', $meta->canonical());
+
+        $meta->localizeUsing(static fn (string $l): string => "https://y.test/{$l}");
+        $this->assertStringContainsString('href="https://y.test/tr"', $meta->canonical());
+    }
+
+    #[Test]
+    public function plain_text_comparisons_survive_sanitising(): void
+    {
+        $this->assertSame('if a < b and c > d', $this->metaTag()->set('description', 'if a < b and c > d'));
+    }
+
+    #[Test]
+    public function it_renders_the_title_with_an_optional_suffix(): void
+    {
+        $meta = $this->metaTag(['title' => 'My Site', 'title_suffix' => 'My Site']);
+        $this->assertSame('<title>My Site</title>
+    ', $meta->titleTag());
+
+        $meta->set('title', 'Fish & Chips');
+        $this->assertSame('Fish & Chips | My Site', $meta->fullTitle());
+        $this->assertStringContainsString('<title>Fish &amp; Chips | My Site</title>', $meta->titleTag());
+
+        $this->assertSame('', $this->metaTag()->titleTag());
+    }
+
+    #[Test]
+    public function it_sets_robots_directives(): void
+    {
+        $meta = $this->metaTag();
+
+        $meta->noindex();
+        $this->assertSame('noindex,nofollow', $meta->get('robots'));
+        $meta->noindex(follow: true);
+        $this->assertSame('noindex,follow', $meta->get('robots'));
+        $meta->index();
+        $this->assertSame('index,follow', $meta->get('robots'));
+    }
+
+    #[Test]
+    public function it_renders_json_ld_safely(): void
+    {
+        $meta = $this->metaTag();
+        $this->assertSame('', $meta->jsonLd());
+
+        $meta->addJsonLd(['@type' => 'Article', 'headline' => 'Hi </script><script>alert(1)</script> çağrı']);
+        $html = $meta->jsonLd();
+
+        $this->assertStringContainsString('<script type="application/ld+json">{"@context":"https://schema.org","@type":"Article"', $html);
+        $this->assertStringNotContainsString('</script><script>', $html);
+        $this->assertStringContainsString('çağrı', $html);
+    }
+
+    #[Test]
+    public function it_renders_extended_open_graph_and_twitter_tags(): void
+    {
+        $meta = $this->metaTag();
+        $meta->set('image', 'https://example.com/a.png');
+        $meta->set('image:width', 1200);
+        $meta->set('image:alt', 'A picture');
+        $meta->set('article:published_time', '2026-01-01T00:00:00Z');
+
+        $og = $meta->openGraph();
+        $this->assertStringContainsString('<meta property="og:image:width" content="1200">', $og);
+        $this->assertStringContainsString('<meta property="og:image:alt" content="A picture">', $og);
+        $this->assertStringContainsString('<meta property="article:published_time" content="2026-01-01T00:00:00Z">', $og);
+
+        $twitter = $meta->twitterCard();
+        $this->assertStringContainsString('<meta name="twitter:image" content="https://example.com/a.png">', $twitter);
+        $this->assertStringContainsString('<meta name="twitter:image:alt" content="A picture">', $twitter);
+    }
+
+    #[Test]
+    public function it_renders_the_whole_head_block_and_compact_output(): void
+    {
+        $meta = $this->metaTag(['title' => 'Home', 'indent' => '']);
+        $meta->set('description', 'Hello');
+        $meta->noindex();
+
+        $html = $meta->render()->toHtml();
+
+        $this->assertStringStartsWith('<title>Home</title>
+<meta name="description" content="Hello">
+<meta name="robots"', $html);
+        $this->assertStringContainsString('<link rel="canonical"', $html);
+        $this->assertStringContainsString('og:title', $html);
+        $this->assertSame($html, $meta->toHtml());
+    }
+
+    #[Test]
+    public function identical_json_ld_documents_are_added_once(): void
+    {
+        $meta = $this->metaTag();
+        $meta->addJsonLd(['@type' => 'WebSite']);
+        $meta->addJsonLd(['@type' => 'WebSite']);
+
+        $this->assertCount(1, $meta->jsonLd);
     }
 }

@@ -11,6 +11,12 @@ use Siberfx\LaraMeta\MetaTagsServiceProvider;
 
 abstract class TestCase extends Orchestra
 {
+    #[Override]
+    protected function defineEnvironment($app): void
+    {
+        config(['app.key' => 'base64:'.base64_encode(str_repeat('a', 32))]);
+    }
+
     /**
      * @return list<class-string>
      */

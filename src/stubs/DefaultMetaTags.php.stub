@@ -29,6 +29,13 @@ final class DefaultMetaTags
         MetaTag::set('image', asset('images/share-default.png'));
         MetaTag::set('robots', app()->isProduction() ? 'index,follow' : 'noindex,nofollow');
 
+        // Site-wide structured data; controllers can add page-specific documents (Article, Product, …).
+        MetaTag::addJsonLd([
+            '@type' => 'WebSite',
+            'name' => config('app.name'),
+            'url' => url('/'),
+        ]);
+
         return $next($request);
     }
 }

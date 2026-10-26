@@ -1,0 +1,25 @@
+name: release
+
+on:
+    push:
+        tags: ['v*', '[0-9]*']
+
+permissions:
+    contents: write
+
+jobs:
+    release:
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v5
+            - name: Extract release notes from CHANGELOG.md
+              run: |
+                  version="${GITHUB_REF_NAME#v}"
+                  awk -v v="$version" '
+                      /^## / { if (found) exit; if (index($0, "[" v "]") || index($0, "## " v)) found=1; next }
+                      found { print }
+                  ' CHANGELOG.md > notes.md
+                  [ -s notes.md ] || echo "Release ${GITHUB_REF_NAME}" > notes.md
+            - run: gh release create "$GITHUB_REF_NAME" --title "$GITHUB_REF_NAME" --notes-file notes.md
+              env:
+                  GH_TOKEN: ${{ github.token }}

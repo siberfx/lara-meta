@@ -5,8 +5,12 @@ declare(strict_types=1);
 namespace Siberfx\LaraMeta;
 
 use Illuminate\Contracts\Foundation\Application;
+use Illuminate\Contracts\Http\Kernel;
+use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\ServiceProvider;
 use Override;
+use Siberfx\LaraMeta\Http\Middleware\InjectDefaultMetaTags;
+use Siberfx\LaraMeta\View\Components\MetaTags;
 
 class MetaTagsServiceProvider extends ServiceProvider
 {
@@ -35,6 +39,14 @@ class MetaTagsServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        Blade::component('meta-tags', MetaTags::class);
+        Blade::directive('metaTags', static fn (): string => "<?php echo app('metatag')->toHtml(); ?>");
+
+        if ($this->app->make('config')->get(self::CONFIG_KEY.'.auto_middleware') !== false) {
+            // Through the kernel: it re-syncs its groups to the router on every request.
+            $this->app->make(Kernel::class)->appendMiddlewareToGroup('web', InjectDefaultMetaTags::class);
+        }
+
         if (! $this->app->runningInConsole()) {
             return;
         }
