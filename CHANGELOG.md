@@ -3,6 +3,11 @@
 All notable changes to `siberfx/lara-meta` are documented here. This project adheres to
 [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [7.5.1] — 2026-11-05
+
+Re-release of 7.5.0 with no code changes. The `7.5.0` tag was moved after it was published, so Packagist kept the
+original 7.5.0 reference and blocked the update. Use 7.5.1.
+
 ## [7.5.0] — 2026-11-05
 
 Restores **PHP 8.3** support (PHP 8.3 – 8.5 on Laravel 12 and 13) and moves the test suite to Pest.
