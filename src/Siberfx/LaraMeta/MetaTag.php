@@ -18,6 +18,11 @@ use Stringable;
  *
  * Values are sanitised when stored (markup stripped, whitespace collapsed,
  * length-limited per config) and HTML-escaped when rendered.
+ *
+ * @property-read array<string, string> $metas Meta values set for the current request, keyed by name.
+ * @property-read list<string> $locales Locale codes used to build `hreflang` alternate links.
+ * @property-read list<array<array-key, mixed>> $jsonLd JSON-LD documents rendered as `application/ld+json` scripts.
+ * @property-read string $title The current page title (shortcut for `get('title', '')`).
  */
 class MetaTag implements Htmlable
 {
@@ -26,32 +31,24 @@ class MetaTag implements Htmlable
     private const string DEFAULT_INDENT = '    ';
 
     /**
-     * Meta values set for the current request, keyed by name.
-     *
+     * Read-only properties exposed through {@see __get()}.
+     */
+    private const array READ_ONLY = ['metas', 'locales', 'jsonLd', 'title'];
+
+    /**
      * @var array<string, string>
      */
-    public private(set) array $metas = [];
+    private array $metaValues = [];
 
     /**
-     * Locale codes used to build `hreflang` alternate links.
-     *
      * @var list<string>
      */
-    public private(set) array $locales = [];
+    private array $localeCodes = [];
 
     /**
-     * JSON-LD documents rendered as `application/ld+json` scripts.
-     *
      * @var list<array<array-key, mixed>>
      */
-    public private(set) array $jsonLd = [];
-
-    /**
-     * The current page title (shortcut for `get('title', '')`).
-     */
-    public string $title {
-        get => $this->get('title', '');
-    }
+    private array $jsonLdDocuments = [];
 
     /**
      * Resolves the alternate URL of a locale, replacing the `locale_url` template.
@@ -78,11 +75,40 @@ class MetaTag implements Htmlable
     }
 
     /**
+     * Read access to the `metas`, `locales`, `jsonLd` and `title` properties.
+     */
+    public function __get(string $name): mixed
+    {
+        return match ($name) {
+            'metas' => $this->metaValues,
+            'locales' => $this->localeCodes,
+            'jsonLd' => $this->jsonLdDocuments,
+            'title' => $this->get('title', ''),
+            default => throw new \Error(sprintf('Undefined property: %s::$%s', static::class, $name)),
+        };
+    }
+
+    public function __isset(string $name): bool
+    {
+        return in_array($name, self::READ_ONLY, true);
+    }
+
+    /**
+     * The magic properties are read-only.
+     */
+    public function __set(string $name, mixed $value): never
+    {
+        throw new \Error(in_array($name, self::READ_ONLY, true)
+            ? sprintf('Cannot modify read-only property %s::$%s', static::class, $name)
+            : sprintf('Cannot create dynamic property %s::$%s', static::class, $name));
+    }
+
+    /**
      * @param  iterable<mixed>  $locales
      */
     public function setLocales(iterable $locales = []): void
     {
-        $this->locales = array_values(array_map(
+        $this->localeCodes = array_values(array_map(
             static fn (string|int|float|bool $locale): string => (string) $locale,
             array_filter([...$locales], is_scalar(...)),
         ));
@@ -106,7 +132,7 @@ class MetaTag implements Htmlable
      */
     public function get(string $key, ?string $default = null): ?string
     {
-        return $this->metas[$key] ?? $default;
+        return $this->metaValues[$key] ?? $default;
     }
 
     /**
@@ -114,17 +140,17 @@ class MetaTag implements Htmlable
      */
     public function set(string $key, string|Stringable|int|float|null $value = null): string
     {
-        return $this->metas[$key] = $this->limit($this->sanitize($value), $this->limitFor($key));
+        return $this->metaValues[$key] = $this->limit($this->sanitize($value), $this->limitFor($key));
     }
 
     public function has(string $key): bool
     {
-        return ($this->metas[$key] ?? '') !== '';
+        return ($this->metaValues[$key] ?? '') !== '';
     }
 
     public function forget(string $key): void
     {
-        unset($this->metas[$key]);
+        unset($this->metaValues[$key]);
     }
 
     /**
@@ -152,8 +178,8 @@ class MetaTag implements Htmlable
     {
         $document = ['@context' => 'https://schema.org', ...$data];
 
-        if (! in_array($document, $this->jsonLd, true)) {
-            $this->jsonLd[] = $document;
+        if (! in_array($document, $this->jsonLdDocuments, true)) {
+            $this->jsonLdDocuments[] = $document;
         }
     }
 
@@ -162,13 +188,14 @@ class MetaTag implements Htmlable
      */
     public function fullTitle(): string
     {
+        $title = $this->get('title', '');
         $suffix = $this->configString('title_suffix');
 
-        if ($suffix === '' || $this->title === '' || $this->title === $suffix) {
-            return $this->title !== '' ? $this->title : $suffix;
+        if ($suffix === '' || $title === '' || $title === $suffix) {
+            return $title !== '' ? $title : $suffix;
         }
 
-        return $this->title.$this->configString('title_separator', ' | ').$suffix;
+        return $title.$this->configString('title_separator', ' | ').$suffix;
     }
 
     /**
@@ -205,7 +232,7 @@ class MetaTag implements Htmlable
             'href' => $this->get('url', $this->request->url()),
         ]);
 
-        foreach ($this->locales as $locale) {
+        foreach ($this->localeCodes as $locale) {
             $html .= $this->createElement('link', [
                 'rel' => 'alternate',
                 'hreflang' => $locale,
@@ -213,7 +240,7 @@ class MetaTag implements Htmlable
             ]);
         }
 
-        if ($this->locales !== [] && ($this->config['x_default'] ?? true) !== false) {
+        if ($this->localeCodes !== [] && ($this->config['x_default'] ?? true) !== false) {
             $html .= $this->createElement('link', [
                 'rel' => 'alternate',
                 'hreflang' => 'x-default',
@@ -285,7 +312,7 @@ class MetaTag implements Htmlable
     {
         $html = '';
 
-        foreach ($this->jsonLd as $document) {
+        foreach ($this->jsonLdDocuments as $document) {
             $json = json_encode(
                 $document,
                 JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_PARTIAL_OUTPUT_ON_ERROR,

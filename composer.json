@@ -21,16 +21,16 @@
         }
     ],
     "require": {
-        "php": "^8.4",
+        "php": "^8.3",
         "ext-mbstring": "*",
         "illuminate/http": "^12.0 || ^13.30",
         "illuminate/support": "^12.0 || ^13.30"
     },
     "require-dev": {
-        "larastan/larastan": "^3.0",
-        "laravel/pint": "^1.20",
-        "orchestra/testbench": "^10.0 || ^11.0",
-        "phpunit/phpunit": "^11.5 || ^12.0"
+        "larastan/larastan": "^3.14",
+        "laravel/pint": "^1.32",
+        "orchestra/testbench": "^10.12 || ^11.3",
+        "pestphp/pest": "^4.7 || ^5.3"
     },
     "autoload": {
         "psr-4": {
@@ -43,7 +43,7 @@
         }
     },
     "scripts": {
-        "test": "phpunit",
+        "test": "pest",
         "analyse": "phpstan analyse --memory-limit=512M",
         "format": "pint",
         "lint": "pint --test",
@@ -64,7 +64,10 @@
         }
     },
     "config": {
-        "sort-packages": true
+        "sort-packages": true,
+        "allow-plugins": {
+            "pestphp/pest-plugin": true
+        }
     },
     "minimum-stability": "stable",
     "prefer-stable": true

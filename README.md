@@ -1,6 +1,6 @@
 # Lara Meta
 
-[![PHP 8.4 | 8.5](https://img.shields.io/badge/PHP-8.4%20%7C%208.5-777BB4?logo=php&logoColor=white)](https://www.php.net/supported-versions.php)
+[![PHP 8.3 | 8.4 | 8.5](https://img.shields.io/badge/PHP-8.3%20%7C%208.4%20%7C%208.5-777BB4?logo=php&logoColor=white)](https://www.php.net/supported-versions.php)
 [![Laravel 12 | 13](https://img.shields.io/badge/Laravel-12.x%20%7C%2013.x-FF2D20?logo=laravel&logoColor=white)](https://laravel.com/docs/releases)
 [![Tests](https://github.com/siberfx/lara-meta/actions/workflows/tests.yml/badge.svg)](https://github.com/siberfx/lara-meta/actions/workflows/tests.yml)
 [![Latest Stable Version](https://poser.pugx.org/siberfx/lara-meta/v/stable)](https://packagist.org/packages/siberfx/lara-meta)
@@ -40,14 +40,15 @@ controllers, then render them in your layout with one line each.
 
 | Package | PHP        | Laravel    |
 | ------- | ---------- | ---------- |
-| 7.4+    | 8.4 – 8.5  | 12.x, 13.x |
+| 7.5+    | 8.3 – 8.5  | 12.x, 13.x |
+| 7.4     | 8.4 – 8.5  | 12.x, 13.x |
 
 Every PHP / Laravel combination below is tested in CI, against both the lowest and the latest allowed dependencies.
 
-| Laravel | PHP 8.4 | PHP 8.5 |
-| ------- | :-----: | :-----: |
-| 12.x    | ✅      | ✅      |
-| 13.x    | ✅      | ✅      |
+| Laravel | PHP 8.3 | PHP 8.4 | PHP 8.5 |
+| ------- | :-----: | :-----: | :-----: |
+| 12.x    | ✅      | ✅      | ✅      |
+| 13.x    | ✅      | ✅      | ✅      |
 
 ## Installation
 
@@ -659,7 +660,7 @@ Published to `config/meta-tags.php`:
 ## Testing the package
 
 ```bash
-composer test      # PHPUnit
+composer test      # Pest
 composer analyse   # PHPStan (level max, Larastan)
 composer lint      # Pint
 composer ci        # all of the above

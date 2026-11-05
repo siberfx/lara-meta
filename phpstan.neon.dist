@@ -3,9 +3,9 @@ includes:
 
 parameters:
     level: max
+    # Tests use Pest's dynamic expectation API, which PHPStan cannot follow; they are exercised by `composer test`.
     paths:
         - src
-        - tests
     scanFiles:
         - src/stubs/DefaultMetaTags.php.stub
     ignoreErrors:

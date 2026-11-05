@@ -1,5 +1,10 @@
 # Upgrade guide
 
+## To 7.5 from 7.4
+
+No code changes are needed. PHP 8.3 is supported again; `$metas`, `$locales`, `$jsonLd` and `$title` are still
+public and read-only, and assigning to them still throws an `Error`.
+
 ## To 7.4 from 7.3
 
 Requires PHP 8.4+ and Laravel 12 or 13.

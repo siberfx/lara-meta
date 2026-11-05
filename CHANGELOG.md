@@ -3,6 +3,20 @@
 All notable changes to `siberfx/lara-meta` are documented here. This project adheres to
 [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [7.5.0] — 2026-11-05
+
+Restores **PHP 8.3** support (PHP 8.3 – 8.5 on Laravel 12 and 13) and moves the test suite to Pest.
+
+### Changed
+- `composer.json` requires `php: ^8.3` (was `^8.4`).
+- `$metas`, `$locales`, `$jsonLd` and `$title` are now read-only magic properties instead of PHP 8.4
+  asymmetric visibility and a property hook. Reading them works as before, and writing still throws an `Error`.
+- Test suite converted from PHPUnit to **Pest** (`pestphp/pest ^4.7 || ^5.3`). Pest 5 runs on PHPUnit `^13.4.5`
+  (PHP 8.4+), and Pest 4 on PHPUnit 12.5 (PHP 8.3). Added architecture tests: strict types, no debug calls.
+- Dev dependencies raised to current releases: Larastan `^3.14`, Pint `^1.32`, Testbench `^10.12 || ^11.3`.
+- CI matrix now covers PHP 8.3, 8.4 and 8.5. PHPStan now analyses `src/` only, because it cannot follow Pest's dynamic
+  expectation API.
+
 ## [7.4.0] — 2026-10-26
 
 Officially supports **PHP 8.4 and 8.5** on **Laravel 12 and 13**, and modernises the codebase.
